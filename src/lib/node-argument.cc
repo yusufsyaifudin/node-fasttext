@@ -12,6 +12,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <vector>
+#include <algorithm> // for std::find
+#include <iterator> // for std::begin, std::end
 
 #include "node-argument.h"
 
@@ -95,6 +97,14 @@ namespace NodeArgument
     {
       v8::Local<v8::Array> props = maybe_props.ToLocalChecked();
       indexLen = props->Length();
+
+      // for validation
+      std::string permitted_command[] = {
+        "input", "test", "output", "lr", "lrUpdateRate", 
+        "dim", "ws", "epoch", "minCount", "minCountLabel", "neg",
+        "wordNgrams", "loss", "bucket", "minn", "maxn",
+        "thread", "t", "label", "verbose", "pretrainedVectors"
+      };
       
       for (uint32_t i = 0; i < indexLen; ++i) {
         v8::Local<v8::Value> key = props->Get(i);
@@ -102,6 +112,14 @@ namespace NodeArgument
 
         std::string keyValue = std::string(*utf8_key);
         char *theKey = (char *)keyValue.c_str();
+
+        bool exists = std::find(std::begin(permitted_command), 
+          std::end(permitted_command), keyValue) != std::end(permitted_command);
+
+        if(!exists)
+        {
+          throw "Unknown argument: " + keyValue;
+        }
 
         v8::Local<v8::Value> value = obj->Get(v8::String::NewFromUtf8(isolate, theKey));
         v8::String::Utf8Value utf8_value(value->ToString());

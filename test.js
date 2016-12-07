@@ -1,14 +1,21 @@
 var fasttext = require('bindings')('node-fasttext');
 
-fasttext.train("supervised",
-{ 
+let config = { 
   dim: 100,
   input: "data/dbpedia.train",
   output: "dbpedia"
-}, function (success, error) {
-  console.log(success)
-  console.log(error)
-})
+}
+
+// fasttext.train("supervised", config, function (success, error) {
+
+//   if(error) {
+//     console.log(error)
+//     return;
+//   }
+  
+//   console.log(success)
+  
+// })
 
 // fasttext.printVectors(
 // "dbpedia.bin",
@@ -16,4 +23,15 @@ fasttext.train("supervised",
 // function (success, error) {
 //   console.log(success)
 //   console.log(error)
+// })
+
+// fasttext.modelInfo("dbpedia.bin", function (success, error) {
+
+//   if(error) {
+//     console.log(error)
+//     return;
+//   }
+  
+//   console.log(success)
+  
 // })

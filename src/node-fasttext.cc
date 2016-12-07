@@ -1,6 +1,7 @@
 #include <node.h>
 #include <v8.h>
 #include <iostream>
+#include <map>
 
 #include "lib/fasttext-wrapper.h"
 #include "lib/node-argument.h"
@@ -60,7 +61,21 @@ void train(const v8::FunctionCallbackInfo<v8::Value>& args)
 
   NodeArgument::NodeArgument nodeArg;
 
-  NodeArgument::CArgument c_argument = nodeArg.ObjectToCArgument(obj);
+  NodeArgument::CArgument c_argument;
+
+  // check if parameter is permitted to be assigned to fasttext
+  try {
+    c_argument = nodeArg.ObjectToCArgument(obj);
+  } catch (std::string errorMessage) {
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      v8::Null(isolate),
+      v8::Exception::Error(v8::String::NewFromUtf8(isolate, errorMessage.c_str()))    
+    };
+
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+    return;
+  }
   
   int count = c_argument.argc;
   char** argument = c_argument.argv;
@@ -81,15 +96,43 @@ void train(const v8::FunctionCallbackInfo<v8::Value>& args)
 
   if (command == "skipgram" || command == "cbow" || command == "supervised") 
   {
-    fasttextWrapper.train(argc, argv);
+    try {
+      std::map<std::string, std::string> trainResult = fasttextWrapper.train(argc, argv);
 
-    v8::Local<v8::Value> callback[2] = 
-    { 
-      v8::String::NewFromUtf8(isolate, "SUCCESS"),
-      v8::Null(isolate)      
-    };
-    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
-    return;
+      // set object to be returned
+      v8::Local<v8::Object> returnObject = v8::Object::New(isolate);
+
+      for(auto const& iterator : trainResult)
+      {
+        // for debugging purpose
+        // std::cout << iterator.first << ": " << iterator.second << std::endl;
+        returnObject->Set(
+          v8::String::NewFromUtf8(isolate, iterator.first.c_str()), 
+          v8::String::NewFromUtf8(isolate, iterator.second.c_str())
+        );
+      }
+
+      v8::Local<v8::Value> callback[2] = 
+      { 
+        returnObject,
+        v8::Null(isolate)      
+      };
+      callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+      return;
+
+    } catch (std::string errorMessage) {
+
+      v8::Local<v8::String> message = v8::String::NewFromUtf8(isolate, errorMessage.c_str());
+      
+      v8::Local<v8::Value> callback[2] = 
+      { 
+        v8::Null(isolate),
+        v8::Exception::Error(message)    
+      };
+
+      callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+      return;
+    }
 
   }
   else
@@ -182,10 +225,90 @@ void printVectors(const v8::FunctionCallbackInfo<v8::Value>& args)
   return;
 }
 
+void modelInfo(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+  v8::Isolate* isolate = v8::Isolate::GetCurrent();
+  v8::HandleScope scope(isolate);
+
+  // callback index in second order (index start from zero)
+  v8::Local<v8::Function> callbackIndex = v8::Local<v8::Function>::Cast(args[1]);
+
+  if (args.Length() != 2) 
+  {
+    // number of callback params (in this case 2 argument/parameter)
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      // array of callback value
+      v8::Null(isolate),
+      v8::Exception::Error(v8::String::NewFromUtf8(isolate, "Not enough arguments."))
+    };
+
+    // will be the same as above (number of callback params)
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+    return;
+  } 
+  
+  if (!args[0]->IsString()) 
+  {
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      v8::Null(isolate),
+      v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, "First argument must be string (model name)."))
+    };
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+    return;
+  }
+
+  // Do anything here
+  // Get model name
+  v8::String::Utf8Value modelName(args[0]->ToString());
+  std::string model = std::string(*modelName);
+
+  try {
+    std::map<std::string, std::string> modelResult = fasttextWrapper.loadModel(model);
+
+    // set object to be returned
+    v8::Local<v8::Object> returnObject = v8::Object::New(isolate);
+
+    for(auto const& iterator : modelResult)
+    {
+      // for debugging purpose
+      // std::cout << iterator.first << ": " << iterator.second << std::endl;
+      returnObject->Set(
+        v8::String::NewFromUtf8(isolate, iterator.first.c_str()), 
+        v8::String::NewFromUtf8(isolate, iterator.second.c_str())
+      );
+    }
+
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      returnObject,
+      v8::Null(isolate)      
+    };
+
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+    return;
+
+  } catch (std::string errorMessage) {
+    // some exception
+    v8::Local<v8::String> message = v8::String::NewFromUtf8(isolate, errorMessage.c_str());
+    
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      v8::Null(isolate),
+      v8::Exception::Error(message)    
+    };
+
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+    return;
+  }
+}
+
 void Init(v8::Handle<v8::Object> exports)
 {
   NODE_SET_METHOD(exports, "train", train);
   NODE_SET_METHOD(exports, "printVectors", printVectors);
+  NODE_SET_METHOD(exports, "modelInfo", modelInfo);
 }
 
 

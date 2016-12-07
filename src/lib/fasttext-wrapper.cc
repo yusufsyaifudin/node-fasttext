@@ -2,16 +2,17 @@
 #include <sstream>
 #include <fenv.h>
 #include <math.h>
+#include <string>
 
 #include <iomanip>
 #include <thread>
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <map>
 
 #include "fasttext/src/args.h"
 #include "fasttext/src/fasttext.h"
-
 
 #include "fasttext-wrapper.h"
 
@@ -25,16 +26,37 @@ namespace FastTextWrapper {
 
   std::shared_ptr<fasttext::Model> model_ = NULL;
 
-  void FastTextWrapper::train(int argc, char** argv) 
+  bool FastTextWrapper::fileExist(const std::string& filename)
+  {
+    if (FILE *file = fopen(filename.c_str(), "r"))
+    {
+      fclose(file);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  std::map<std::string, std::string> FastTextWrapper::train(int argc, char** argv) 
   {
     std::shared_ptr<fasttext::Args> a = std::make_shared<fasttext::Args>();
     a->parseArgs(argc, argv);
     fasttext::FastText fasttext;
 
+    std::cout << "Input >>>>>>>> " << a->input << std::endl;
     std::cout << "Output >>>>>>>> " << a->output << std::endl;
-    fasttext.train(a); 
 
-    loadModel(a->output + ".bin");
+    std::string inputFilename = a->input;
+    if ( !fileExist(inputFilename) )
+    {
+      std::string errorMessage = "Input file is not exist.";
+      throw errorMessage;
+    }
+
+    fasttext.train(a);
+    return loadModel(a->output + ".bin");
   }
 
   void FastTextWrapper::textVectors(std::vector<std::string> words)
@@ -78,12 +100,14 @@ namespace FastTextWrapper {
     }
   }
 
-  void FastTextWrapper::loadModel(std::string filename)
+  std::map<std::string, std::string> FastTextWrapper::loadModel(std::string filename)
   {
+    std::map<std::string, std::string> response;
+
     std::ifstream ifs(filename, std::ifstream::binary);
     if (!ifs.is_open()) {
-      std::cerr << "Model file cannot be opened for loading!" << std::endl;
-      exit(EXIT_FAILURE);
+      std::string errorMessage = "Model file cannot be opened for loading!";
+      throw errorMessage;
     }
 
     args_->load(ifs);
@@ -99,11 +123,65 @@ namespace FastTextWrapper {
       model_->setTargetCounts(dict_->getCounts(fasttext::entry_type::word));
     }
 
-    std::cout << "jumlah kata: " << dict_->nwords() << std::endl;
-    std::cout << "jumlah label: " << dict_->nlabels() << std::endl;
-    std::cout << "jumlah token: " << dict_->ntokens() << std::endl;
+
+    // dictionary
+    response["word_count"] = std::to_string( dict_->nwords() );
+    response["label_count"] = std::to_string( dict_->nlabels() );
+    response["token_count"] = std::to_string( dict_->ntokens() );
+
+    // arguments
+    response["lr"] = std::to_string( args_->lr );
+    response["dim"] = std::to_string( args_->dim );
+    response["ws"] = std::to_string( args_->ws );
+    response["epoch"] = std::to_string( args_->epoch );
+    response["minCount"] = std::to_string( args_->minCount );
+    response["minCountLabel"] = std::to_string( args_->minCountLabel );
+    response["neg"] = std::to_string( args_->neg );
+    response["wordNgrams"] = std::to_string( args_->wordNgrams );
+
+    std::string loss_name = "";
+    if(args_->loss == fasttext::loss_name::hs)
+    {
+      loss_name = "hs";
+    }
+    else if (args_->loss == fasttext::loss_name::ns)
+    {
+      loss_name = "ns";
+    }
+    else if (args_->loss == fasttext::loss_name::softmax)
+    {
+      loss_name = "softmax";
+    }
+
+    std::string model_name = "";
+    if(args_->model == fasttext::model_name::cbow)
+    {
+      model_name = "cbow";
+    }
+    else if (args_->model == fasttext::model_name::sup)
+    {
+      model_name = "supervised";
+    }
+    else if (args_->model == fasttext::model_name::sg)
+    {
+      model_name = "skipgram";
+    }
+
+    response["loss"] = loss_name;
+    response["model"] = model_name;
+    response["bucket"] = std::to_string( args_->bucket );
+    response["minn"] = std::to_string( args_->minn );
+    response["maxn"] = std::to_string( args_->maxn );
+    response["thread"] = std::to_string( args_->thread );
+    response["lrUpdateRate"] = std::to_string( args_->lrUpdateRate );
+    response["t"] = std::to_string( args_->t );
+    response["label"] = args_->label;
+    response["verbose"] = std::to_string( args_->verbose );
+    response["pretrainedVectors"] = args_->pretrainedVectors;
 
     ifs.close();
+
+    return response;
   }
 
 }

@@ -15,10 +15,11 @@ namespace FastTextWrapper
     class FastTextWrapper
     {
       public:
-        void train(int argc, char** argv);
+        bool fileExist(const std::string& filename);
+        std::map<std::string, std::string> train(int argc, char** argv);
         void textVectors(std::vector<std::string> words);
         void printVectors(std::string filename, std::vector<std::string> words);
-        void loadModel(std::string filename);
+        std::map<std::string, std::string> loadModel(std::string filename);
     };
 }
 
