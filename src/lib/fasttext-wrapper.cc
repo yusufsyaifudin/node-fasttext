@@ -59,8 +59,9 @@ namespace FastTextWrapper {
     return loadModel(a->output + ".bin");
   }
 
-  void FastTextWrapper::textVectors(std::vector<std::string> words)
+  std::map<std::string, std::vector<double>> FastTextWrapper::textVectors(std::vector<std::string> words)
   {
+    std::map<std::string, std::vector<double>> response;
     std::cout << "TEXT VECTOR" << std::endl;
 
     std::vector<int32_t> line, labels;
@@ -83,20 +84,44 @@ namespace FastTextWrapper {
         vec.mul(1.0 / line.size());
       }
 
-      std::cout << words[i] << std::endl;
-      std::cout << vec << std::endl;
+      // std::cout << words[i] << std::endl;
+
+      std::vector<double> arr(vec.size());
+      for ( int64_t i = 0; i < vec.size(); i++ )
+      {
+        arr[i] = vec[i];
+        // std::cout << vec[i] << std::endl;
+      }
+      
+      response[words[i]] = arr;
     }
+
+    // std::cout << "==============================" << std::endl;
+    // std::cout << "====== debugging mode ========" << std::endl;
+    // std::cout << "==============================" << std::endl;
+
+    // for (auto const& iterator : response)
+    // {
+    //   std::cout << iterator.first << std::endl;
+    //   for (uint i = 0; i < iterator.second.size(); ++i)
+    //   {
+    //     std::cout << iterator.second[i] << std::endl;
+    //   }
+    // }
+
+    return response;
   }
 
-  void FastTextWrapper::printVectors(std::string filename, std::vector<std::string> words)
+  std::map<std::string, std::vector<double>> FastTextWrapper::printVectors(std::string filename, std::vector<std::string> words)
   {
     loadModel(filename);
 
     if (args_->model == fasttext::model_name::sup) {
-      textVectors(words);
+      return textVectors(words);
     } else {
       // wordVectors();
       std::cout << "WORD VECTOR" << std::endl;
+      return textVectors(words); // temporary return the same to avoid error in compilation process
     }
   }
 
