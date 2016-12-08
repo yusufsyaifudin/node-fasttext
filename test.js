@@ -6,7 +6,7 @@ let config = {
   output: "dbpedia"
 }
 
-fasttext.train("supervised", config, function (success, error) {
+fasttext.train("skipgram", config, function (success, error) {
 
   if(error) {
     console.log(error)

@@ -17,6 +17,7 @@ namespace FastTextWrapper
       public:
         bool fileExist(const std::string& filename);
         std::map<std::string, std::string> train(int argc, char** argv);
+        std::map<std::string, std::vector<double>> wordVectors(std::vector<std::string> words);
         std::map<std::string, std::vector<double>> textVectors(std::vector<std::string> words);
         std::map<std::string, std::vector<double>> printVectors(std::string filename, std::vector<std::string> words);
         std::map<std::string, std::string> loadModel(std::string filename);

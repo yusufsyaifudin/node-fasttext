@@ -59,6 +59,39 @@ namespace FastTextWrapper {
     return loadModel(a->output + ".bin");
   }
 
+  std::map<std::string, std::vector<double>> FastTextWrapper::wordVectors(std::vector<std::string> words)
+  {
+    std::map<std::string, std::vector<double>> response;
+    std::cout << "WORD VECTOR" << std::endl;
+
+    fasttext::Vector vec(args_->dim);
+    for(uint32_t i = 0; i < words.size(); i++)
+    {
+      // fasttext get vector
+      const std::vector<int32_t>& ngrams = dict_->getNgrams(words[i]);
+      vec.zero();
+      for (auto it = ngrams.begin(); it != ngrams.end(); ++it) {
+        vec.addRow(*input_, *it);
+      }
+
+      if (ngrams.size() > 0) {
+        vec.mul(1.0 / ngrams.size());
+      }
+
+      // tmp variable
+      std::vector<double> arr(vec.size());
+      for ( int64_t i = 0; i < vec.size(); i++ )
+      {
+        arr[i] = vec[i];
+        // std::cout << vec[i] << std::endl;
+      }
+      
+      response[words[i]] = arr;
+    }
+
+    return response;
+  }
+
   std::map<std::string, std::vector<double>> FastTextWrapper::textVectors(std::vector<std::string> words)
   {
     std::map<std::string, std::vector<double>> response;
@@ -119,9 +152,7 @@ namespace FastTextWrapper {
     if (args_->model == fasttext::model_name::sup) {
       return textVectors(words);
     } else {
-      // wordVectors();
-      std::cout << "WORD VECTOR" << std::endl;
-      return textVectors(words); // temporary return the same to avoid error in compilation process
+      return wordVectors(words);
     }
   }
 
