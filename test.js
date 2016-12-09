@@ -6,16 +6,16 @@ let config = {
   output: "dbpedia"
 }
 
-fasttext.train("skipgram", config, function (success, error) {
+// fasttext.train("supervised", config, function (success, error) {
 
-  if(error) {
-    console.log(error)
-    return;
-  }
+//   if(error) {
+//     console.log(error)
+//     return;
+//   }
   
-  console.log(success)
+//   console.log(success)
   
-})
+// })
 
 // fasttext.printVectors(
 // "dbpedia.bin",
