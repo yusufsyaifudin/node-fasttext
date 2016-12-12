@@ -234,39 +234,38 @@ void printVectors(const v8::FunctionCallbackInfo<v8::Value>& args)
   //   std::cout << words[i] << std::endl;
   // }
   
-  std::map<std::string, std::vector<double>> wordVector = fasttextWrapper.printVectors(model, words);
+  std::vector<std::map<std::string, std::vector<double>>> wordVectors = fasttextWrapper.printVectors(model, words);
   
-  v8::Local<v8::Array> response = v8::Array::New(isolate, wordVector.size());
+  v8::Local<v8::Array> response = v8::Array::New(isolate, wordVectors.size());
 
-  int k = 0;
-  for (auto const& iterator : wordVector)
-  {
-    v8::Local<v8::Object> returnObject = v8::Object::New(isolate);
-
-    uint size = iterator.second.size();
-    v8::Local<v8::Array> value = v8::Array::New(isolate, size); 
-    // std::cout << iterator.first << std::endl; // for debugging purpose
-    for (uint i = 0; i < size; ++i)
+  for(uint j = 0; j < wordVectors.size(); j++) {
+    for (auto const& iterator : wordVectors[j])
     {
-      v8::Handle<v8::Number> k = v8::Number::New(isolate, i ); 
-      v8::Handle<v8::Number> v = v8::Number::New(isolate, iterator.second[i]);
-      value->Set(k, v);
-      // std::cout << iterator.second[i] << std::endl; // for debugging purpose
+      v8::Local<v8::Object> returnObject = v8::Object::New(isolate);
+
+      uint size = iterator.second.size();
+      v8::Local<v8::Array> value = v8::Array::New(isolate, size); 
+      // std::cout << iterator.first << std::endl; // for debugging purpose
+      for (uint i = 0; i < size; ++i)
+      {
+        v8::Handle<v8::Number> k = v8::Number::New(isolate, i ); 
+        v8::Handle<v8::Number> v = v8::Number::New(isolate, iterator.second[i]);
+        value->Set(k, v);
+        // std::cout << iterator.second[i] << std::endl; // for debugging purpose
+      }
+
+      returnObject->Set(
+        v8::String::NewFromUtf8(isolate, "key"), 
+        v8::String::NewFromUtf8(isolate, iterator.first.c_str())
+      );
+
+      returnObject->Set(
+        v8::String::NewFromUtf8(isolate, "value"), 
+        value
+      );
+
+      response->Set(j, returnObject);
     }
-
-    returnObject->Set(
-      v8::String::NewFromUtf8(isolate, "key"), 
-      v8::String::NewFromUtf8(isolate, iterator.first.c_str())
-    );
-
-    returnObject->Set(
-      v8::String::NewFromUtf8(isolate, "value"), 
-      value
-    );
-
-    response->Set(k, returnObject);
-
-    k++;
   }
 
   v8::Local<v8::Value> callback[2] = 
