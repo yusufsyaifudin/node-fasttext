@@ -14,8 +14,8 @@
         "src/lib/fasttext-wrapper.cc",
         "src/node-fasttext.cc"
       ],
-      'cflags!': [ '-fno-exceptions' ],
-      'cflags_cc!': [ '-fno-exceptions' ],
+      'cflags!': [ '-fno-exceptions', '-Wformat=2', '-Werror', '-Wsign-compare'],
+      'cflags_cc!': [ '-fno-exceptions', '-Wformat=2', '-Werror', '-Wsign-compare'],
       'conditions': [
         ['OS=="mac"', {
           'xcode_settings': {
