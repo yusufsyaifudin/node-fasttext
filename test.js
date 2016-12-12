@@ -17,18 +17,20 @@ let config = {
   
 // })
 
-// FastText.printVectors(
-// "dbpedia.bin",
-// ['word'],
-// function (success, error) {
+FastText.printVectors(
+"dbpedia.bin",
+['word'],
+function (success, error) {
 
-//   if(error) {
-//     console.log(error)
-//     return;
-//   }
+  if(error) {
+    console.log(error)
+    return;
+  }
 
-//   console.log(success)
-// })
+  for(let i=0; i<success.length; i++) {
+    console.log(success[i].key)
+  }
+})
 
 // FastText.modelInfo("dbpedia.bin", function (success, error) {
 

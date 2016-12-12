@@ -480,6 +480,12 @@ void test(const v8::FunctionCallbackInfo<v8::Value>& args)
   }
 }
 
+
+void predict(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+  
+}
+
 void Init(v8::Handle<v8::Object> exports)
 {
   // "skipgram" || "cbow" || "supervised"

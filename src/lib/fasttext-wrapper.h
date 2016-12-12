@@ -9,6 +9,7 @@
 
 #include <node.h>
 #include <v8.h>
+#include "fasttext/src/real.h"
 
 namespace FastTextWrapper
 {
@@ -22,6 +23,8 @@ namespace FastTextWrapper
         std::map<std::string, std::vector<double>> printVectors(std::string filename, std::vector<std::string> words);
         std::map<std::string, std::string> loadModel(std::string filename);
         std::map<std::string, std::string> test(std::string model, std::string testFile, int32_t k);
+        void predict(std::string sentence, int32_t k, std::vector<std::pair<fasttext::real,std::string>>& predictions) const;
+        std::vector<std::map<std::string, std::string>> predict(std::string model, std::vector<std::string> sentences, int32_t k);
     };
 }
 

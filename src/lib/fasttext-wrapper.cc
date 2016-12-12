@@ -282,4 +282,54 @@ namespace FastTextWrapper {
     return response;
   }
 
+  void FastTextWrapper::predict(std::string sentence, int32_t k, std::vector<std::pair<fasttext::real,std::string>>& predictions) const {
+    std::vector<int32_t> words, labels;
+
+    std::istringstream input_string(sentence);
+    dict_->getLine(input_string, words, labels, model_->rng);
+    dict_->addNgrams(words, args_->wordNgrams);
+    if (words.empty()) {
+      return;
+    }
+
+    fasttext::Vector hidden(args_->dim);
+    fasttext::Vector output(dict_->nlabels());
+    std::vector<std::pair<fasttext::real,int32_t>> modelPredictions;
+    model_->predict(words, k, modelPredictions, hidden, output);
+    predictions.clear();
+    for (auto it = modelPredictions.cbegin(); it != modelPredictions.cend(); it++) {
+      predictions.push_back(std::make_pair(it->first, dict_->getLabel(it->second)));
+    }
+  }
+
+  std::vector<std::map<std::string, std::string>> FastTextWrapper::predict(std::string model, std::vector<std::string> sentences, int32_t k)
+  {
+    loadModel(model);
+
+    std::vector<std::pair<fasttext::real, std::string>> predictions;
+
+    std::vector<std::map<std::string, std::string>> arr(sentences.size());
+    for(uint i=0; i < sentences.size(); i++) {
+      std::map<std::string, std::string> response;
+
+      predict(sentences[i], k, predictions);
+      if (predictions.empty()) {
+        response["label"] = "n/a";
+        response["confidence_level"] = "0";
+        // std::cout << "n/a" << std::endl;
+        continue;
+      }
+
+      for (auto it = predictions.cbegin(); it != predictions.cend(); it++) {
+        // std::cout << it->second << ": " << exp(it->first);
+        response["label"] = it->second;
+        response["confidence_level"] = std::to_string(exp(it->first));
+      }
+
+      arr[i] = response;
+    }
+
+    return arr;
+  }
+
 }
