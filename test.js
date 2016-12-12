@@ -19,7 +19,7 @@ let config = {
 
 // FastText.printVectors(
 // "dbpedia.bin",
-// ['word', 'word'],
+// ['word', 'word', 'another', 'words', 'here'],
 // function (success, error) {
 
 //   if(error) {
@@ -27,7 +27,7 @@ let config = {
 //     return;
 //   }
 
-//   console.log(success)
+//   console.log(success.length)
 // })
 
 // FastText.modelInfo("dbpedia.bin", function (success, error) {
@@ -50,3 +50,17 @@ let config = {
 //   console.log(data)
   
 // });
+
+// FastText.predict(
+// "dbpedia.bin", 1,
+// ['cola lukei , cola lukei is a species of flowering plant in the malvaceae family . it is found only in tanzania . its natural habitat is subtropical or tropical moist lowland forests . it is threatened by habitat loss .'],
+// function (success, error) {
+
+//   if(error) {
+//     console.log(error)
+//     return;
+//   }
+
+//   console.log(success[0].label == '__label__11')
+//   console.log(success)
+// })

@@ -13,6 +13,13 @@
 
 namespace FastTextWrapper
 {
+    struct PredictResult
+    {
+      std::string text;
+      std::string label;
+      double value;
+    };
+
     class FastTextWrapper
     {
       public:
@@ -24,7 +31,7 @@ namespace FastTextWrapper
         std::map<std::string, std::string> loadModel(std::string filename);
         std::map<std::string, std::string> test(std::string model, std::string testFile, int32_t k);
         void predict(std::string sentence, int32_t k, std::vector<std::pair<fasttext::real,std::string>>& predictions) const;
-        std::vector<std::map<std::string, std::string>> predict(std::string model, std::vector<std::string> sentences, int32_t k);
+        std::vector<PredictResult> predict(std::string model, std::vector<std::string> sentences, int32_t k);
     };
 }
 

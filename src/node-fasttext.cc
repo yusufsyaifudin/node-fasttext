@@ -482,7 +482,118 @@ void test(const v8::FunctionCallbackInfo<v8::Value>& args)
 
 void predict(const v8::FunctionCallbackInfo<v8::Value>& args)
 {
+  v8::Isolate* isolate = v8::Isolate::GetCurrent();
+  v8::HandleScope scope(isolate);
+
+  // callback index in third order (index start from zero)
+  v8::Local<v8::Function> callbackIndex = v8::Local<v8::Function>::Cast(args[3]);
+
+  if (args.Length() != 4) 
+  {
+    // number of callback params (in this case 2 argument/parameter)
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      // array of callback value
+      v8::Null(isolate),
+      v8::Exception::Error(v8::String::NewFromUtf8(isolate, "Not enough arguments."))
+    };
+
+    // will be the same as above (number of callback params)
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+    return;
+  } 
   
+  if (!args[0]->IsString()) 
+  {
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      v8::Null(isolate),
+      v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, "First argument must be string (model name)."))
+    };
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+    return;
+  } 
+  
+  if (!args[1]->IsNumber())
+  {
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      v8::Null(isolate),
+      v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, "Second argument must be a numer (k value)."))
+    };
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+    return;
+  }
+
+  if (!args[2]->IsArray())
+  {
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      v8::Null(isolate),
+      v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, "Third argument must be an array."))
+    };
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+    return;
+  }
+
+  try {
+    v8::String::Utf8Value modelName(args[0]->ToString());
+    std::string model = std::string(*modelName);
+
+    int32_t k = args[1]->Uint32Value();
+    v8::Local<v8::Object> obj = v8::Local<v8::Object>::Cast(args[2]);
+
+    NodeArgument::NodeArgument nodeArg;
+    std::vector<std::string> sentences = nodeArg.ObjectToArrayString(obj);
+
+    std::vector<FastTextWrapper::PredictResult> predictResult = fasttextWrapper.predict(model, sentences, k);
+    v8::Local<v8::Array> response = v8::Array::New(isolate, predictResult.size());
+
+    for(uint32_t i = 0; i < predictResult.size(); i++) {
+      v8::Local<v8::Object> returnObject = v8::Object::New(isolate);
+
+      returnObject->Set(
+        v8::String::NewFromUtf8(isolate, "text"),
+        v8::String::NewFromUtf8(isolate, predictResult[i].text.c_str())
+      );
+
+      returnObject->Set(
+        v8::String::NewFromUtf8(isolate, "label"), 
+        v8::String::NewFromUtf8(isolate, predictResult[i].label.c_str())
+      );
+
+      returnObject->Set(
+        v8::String::NewFromUtf8(isolate, "value"), 
+        v8::Number::New(isolate, predictResult[i].value)
+      );
+
+      // std::cout << predictResult[i].label.c_str() << std::endl;
+      response->Set(i, returnObject);
+    }
+
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      response,
+      v8::Null(isolate)      
+    };
+
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+
+    return;
+
+  } catch (std::string errorMessage) {
+    // some exception
+    v8::Local<v8::String> message = v8::String::NewFromUtf8(isolate, errorMessage.c_str());
+    
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      v8::Null(isolate),
+      v8::Exception::Error(message)    
+    };
+
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+    return;
+  }
 }
 
 void Init(v8::Handle<v8::Object> exports)
@@ -498,6 +609,9 @@ void Init(v8::Handle<v8::Object> exports)
 
   // test model with input value
   NODE_SET_METHOD(exports, "test", test);
+
+  // predict
+  NODE_SET_METHOD(exports, "predict", predict);
 }
 
 
