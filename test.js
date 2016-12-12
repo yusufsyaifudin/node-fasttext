@@ -1,4 +1,4 @@
-var fasttext = require('bindings')('node-fasttext');
+var FastText = require('./index');
 
 let config = { 
   dim: 100,
@@ -6,7 +6,7 @@ let config = {
   output: "dbpedia"
 }
 
-// fasttext.train("supervised", config, function (success, error) {
+// FastText.train("supervised", config, function (success, error) {
 
 //   if(error) {
 //     console.log(error)
@@ -17,7 +17,7 @@ let config = {
   
 // })
 
-// fasttext.printVectors(
+// FastText.printVectors(
 // "dbpedia.bin",
 // ['word'],
 // function (success, error) {
@@ -30,7 +30,7 @@ let config = {
 //   console.log(success)
 // })
 
-// fasttext.modelInfo("dbpedia.bin", function (success, error) {
+// FastText.modelInfo("dbpedia.bin", function (success, error) {
 
 //   if(error) {
 //     console.log(error)
@@ -42,7 +42,7 @@ let config = {
 // })
 
 
-// fasttext.test("dbpedia.bin", "data/dbpedia.test", 1, function (data, error) {
+// FastText.test("dbpedia.bin", "data/dbpedia.test", 1, function (data, error) {
 //   if(error) {
 //     console.log(error)
 //     return;

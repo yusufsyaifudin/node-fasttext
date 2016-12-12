@@ -4,7 +4,7 @@
   "description": "A facebookresearch/fastText wrapper in node js.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node test.js",
     "install": "node-gyp configure; node-gyp build"
   },
   "keywords": [
