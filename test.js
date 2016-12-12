@@ -40,3 +40,13 @@ let config = {
 //   console.log(success)
   
 // })
+
+
+// fasttext.test("dbpedia.bin", "data/dbpedia.test", 1, function (data, error) {
+//   if(error) {
+//     console.log(error)
+//     return;
+//   }
+//   console.log(data)
+  
+// });

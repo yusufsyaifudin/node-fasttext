@@ -12,6 +12,7 @@
 #include <map>
 
 #include "fasttext/src/args.h"
+#include "fasttext/src/real.h"
 #include "fasttext/src/fasttext.h"
 
 #include "fasttext-wrapper.h"
@@ -236,6 +237,47 @@ namespace FastTextWrapper {
     response["pretrainedVectors"] = args_->pretrainedVectors;
 
     ifs.close();
+
+    return response;
+  }
+
+  std::map<std::string, std::string> FastTextWrapper::test(std::string model, std::string testFile, int32_t k)
+  {
+    loadModel(model);
+
+    int32_t nexamples = 0, nlabels = 0;
+    double precision = 0.0;
+    std::vector<int32_t> line, labels;
+
+    std::ifstream ifs(testFile);
+    if (!ifs.is_open()) {
+      std::string errorMessage = "Test file cannot be opened!";
+      throw errorMessage;
+    }
+
+    while (ifs.peek() != EOF) {
+      dict_->getLine(ifs, line, labels, model_->rng);
+      dict_->addNgrams(line, args_->wordNgrams);
+      if (labels.size() > 0 && line.size() > 0) {
+        std::vector<std::pair<fasttext::real, int32_t>> modelPredictions;
+        model_->predict(line, k, modelPredictions);
+        for (auto it = modelPredictions.cbegin(); it != modelPredictions.cend(); it++) {
+          if (std::find(labels.begin(), labels.end(), it->second) != labels.end()) {
+            precision += 1.0;
+          }
+        }
+        nexamples++;
+        nlabels += labels.size();
+      }
+    }
+
+    ifs.close();
+    std::map<std::string, std::string> response;
+    double pAtk = precision / (k * nexamples);
+    double rAtk = precision / nlabels;
+    response["P@" + std::to_string(k) + ""] = std::to_string(pAtk);
+    response["R@" + std::to_string(k) + ""] = std::to_string(rAtk);
+    response["Number of examples"] = std::to_string(nexamples);
 
     return response;
   }

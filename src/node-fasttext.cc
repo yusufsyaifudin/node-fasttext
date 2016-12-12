@@ -366,6 +366,120 @@ void modelInfo(const v8::FunctionCallbackInfo<v8::Value>& args)
   }
 }
 
+void test(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+  v8::Isolate* isolate = v8::Isolate::GetCurrent();
+  v8::HandleScope scope(isolate);
+
+  // callback index in third order (index start from zero)
+  v8::Local<v8::Function> callbackIndex = v8::Local<v8::Function>::Cast(args[3]);
+
+  if (args.Length() != 4) 
+  {
+    // number of callback params (in this case 2 argument/parameter)
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      // array of callback value
+      v8::Null(isolate),
+      v8::Exception::Error(v8::String::NewFromUtf8(isolate, "Not enough arguments."))
+    };
+
+    // will be the same as above (number of callback params)
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+    return;
+  } 
+  
+  if (!args[0]->IsString()) 
+  {
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      v8::Null(isolate),
+      v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, "First argument must be string (model name)."))
+    };
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+    return;
+  } 
+  
+  if (!args[1]->IsString())
+  {
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      v8::Null(isolate),
+      v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, "Second argument must be string (test data file name)."))
+    };
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+    return;
+  }
+
+  if (!args[2]->IsNumber())
+  {
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      v8::Null(isolate),
+      v8::Exception::TypeError(v8::String::NewFromUtf8(isolate, "Third argument must be a number."))
+    };
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+    return;
+  }
+
+  v8::String::Utf8Value modelName(args[0]->ToString());
+  std::string model = std::string(*modelName);
+
+  v8::String::Utf8Value testFileName(args[1]->ToString());
+  std::string testFile = std::string(*testFileName);
+
+  int32_t k = args[2]->Uint32Value();
+
+  try {
+    std::map<std::string, std::string> testResult = fasttextWrapper.test(model, testFile, k);
+  
+    v8::Local<v8::Array> response = v8::Array::New(isolate, testResult.size());
+
+    int i = 0;
+    for(auto const& iterator : testResult)
+      {
+        v8::Local<v8::Object> tmpRespone = v8::Object::New(isolate);
+        // for debugging purpose
+        // std::cout << iterator.first << ": " << iterator.second << std::endl;
+        
+        v8::Local<v8::Value> value;
+        if(isOnlyDouble(iterator.second.c_str())) {
+          value = v8::Number::New(isolate, atof(iterator.second.c_str()));
+        } else {
+          value = v8::String::NewFromUtf8(isolate, iterator.second.c_str());
+        }
+
+        tmpRespone->Set(v8::String::NewFromUtf8(isolate, "key"), v8::String::NewFromUtf8(isolate, iterator.first.c_str()));
+        tmpRespone->Set(v8::String::NewFromUtf8(isolate, "value"), value);
+
+        response->Set(i, tmpRespone);
+        i++;
+      }
+
+      v8::Local<v8::Value> callback[2] = 
+      { 
+        response,
+        v8::Null(isolate)      
+      };
+
+      callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+      return;
+
+  } catch (std::string errorMessage) {
+    // some exception
+    v8::Local<v8::String> message = v8::String::NewFromUtf8(isolate, errorMessage.c_str());
+    
+    v8::Local<v8::Value> callback[2] = 
+    { 
+      v8::Null(isolate),
+      v8::Exception::Error(message)    
+    };
+
+    callbackIndex->Call(isolate->GetCurrentContext()->Global(), 2, callback);
+    return;
+  }
+}
+
 void Init(v8::Handle<v8::Object> exports)
 {
   // "skipgram" || "cbow" || "supervised"
@@ -377,7 +491,8 @@ void Init(v8::Handle<v8::Object> exports)
   // model info <- additional method, no exist in ./fasttext default program
   NODE_SET_METHOD(exports, "modelInfo", modelInfo);
 
-  // 
+  // test model with input value
+  NODE_SET_METHOD(exports, "test", test);
 }
 
 

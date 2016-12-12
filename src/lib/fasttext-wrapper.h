@@ -21,6 +21,7 @@ namespace FastTextWrapper
         std::map<std::string, std::vector<double>> textVectors(std::vector<std::string> words);
         std::map<std::string, std::vector<double>> printVectors(std::string filename, std::vector<std::string> words);
         std::map<std::string, std::string> loadModel(std::string filename);
+        std::map<std::string, std::string> test(std::string model, std::string testFile, int32_t k);
     };
 }
 
