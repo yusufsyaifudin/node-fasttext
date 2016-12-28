@@ -22,8 +22,7 @@ before_script:
   - npm install -g node-gyp
 
 script:
-  - mocha
-  - node-gyp
+  - mocha test.js --timeout 18000000 > /dev/null # travis doesn't like large logs output
 
 after_script: 
   - rm -rf data
