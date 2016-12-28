@@ -10,8 +10,11 @@ before_script:
   - curl -L "http://downloads.sourceforge.net/shunit2/shunit2-2.0.3.tgz" | tar zx
   - bash test.sh
   - npm install -g mocha
+  - npm install -g node-gyp
 
-script: mocha
+script:
+  - mocha
+  - node-gyp
 
 after_script: 
   - rm -rf data
