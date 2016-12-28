@@ -1,0 +1,18 @@
+language: node_js
+
+node_js:
+  - "6"
+  - "5"
+  - "5.1"
+  - "4"
+
+before_script:
+  - curl -L "http://downloads.sourceforge.net/shunit2/shunit2-2.0.3.tgz" | tar zx
+  - bash test.sh
+  - npm install -g mocha
+
+script: mocha
+
+after_script: 
+  - rm -rf data
+  - rm -rf result
