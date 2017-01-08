@@ -1,6 +1,6 @@
 # node-fasttext
 
-[![Build Status](https://travis-ci.org/yusufsyaifudin/node-fasttext.svg?branch=master)](https://travis-ci.org/yusufsyaifudin/node-fasttext)
+[![Build Status](https://travis-ci.org/yusufsyaifudin/node-fasttext.svg?branch=master)](https://travis-ci.org/yusufsyaifudin/node-fasttext) [![npm version](https://badge.fury.io/js/node-fasttext.svg)](https://badge.fury.io/js/node-fasttext)
 
 `npm install --save node-fasttext`
 
